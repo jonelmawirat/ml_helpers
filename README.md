@@ -1,4 +1,4 @@
-# ml_helpers
+# jmawirat_ml_helpers
 
 A lightweight Python package providing handy utilities for time-series feature engineering, splitting, and stationarity transformations.
 
@@ -24,10 +24,10 @@ A lightweight Python package providing handy utilities for time-series feature e
 ## Installation
 
 ```bash
-pip install ml_helpers
+pip install jmawirat_ml_helpers
 ```
 
-That’s it! You can now import the functions directly from the `ml_helpers` package in your Python scripts or notebooks.
+That’s it! You can now import the functions directly from the `jmawirat_ml_helpers` package in your Python scripts or notebooks.
 
 ---
 
@@ -63,12 +63,12 @@ That’s it! You can now import the functions directly from the `ml_helpers` pac
 
 1. **Install** the package:
     ```bash
-    pip install ml_helpers
+    pip install jmawirat_ml_helpers
     ```
 
 2. **Import** the functions in your script or notebook:
     ```python
-    from ml_helpers import (
+    from jmawirat_ml_helpers import (
         split_time_series,
         add_lag_features,
         add_time_features,
@@ -91,7 +91,7 @@ That’s it! You can now import the functions directly from the `ml_helpers` pac
 
 ```python
 import pandas as pd
-from ml_helpers import split_time_series
+from jmawirat_ml_helpers import split_time_series
 
 # Example DataFrame
 df = pd.DataFrame({
@@ -117,7 +117,7 @@ This plots the train/test split automatically and returns the corresponding subs
 
 ```python
 import pandas as pd
-from ml_helpers import add_lag_features
+from jmawirat_ml_helpers import add_lag_features
 
 df = pd.DataFrame({
     'timestamp': pd.date_range(start='2021-01-01', periods=10, freq='D'),
@@ -139,7 +139,7 @@ Generates new columns: `value_lag_1`, `value_lag_2`.
 
 ```python
 import pandas as pd
-from ml_helpers import add_time_features
+from jmawirat_ml_helpers import add_time_features
 
 df = pd.DataFrame({
     'date': pd.date_range('2021-01-01', periods=5, freq='D'),
@@ -157,7 +157,7 @@ print(df_features.columns)
 
 ```python
 import pandas as pd
-from ml_helpers import add_rolling_statistics_features
+from jmawirat_ml_helpers import add_rolling_statistics_features
 
 df = pd.DataFrame({'value': range(10)})
 df_rolled = add_rolling_statistics_features(
@@ -176,7 +176,7 @@ print(df_rolled.columns)
 
 ```python
 import pandas as pd
-from ml_helpers import make_stationary
+from jmawirat_ml_helpers import make_stationary
 
 # Sample DataFrame
 df = pd.DataFrame({

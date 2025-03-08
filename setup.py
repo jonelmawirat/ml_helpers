@@ -4,8 +4,8 @@ with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="ml_helpers",
-    version="1.0.0",
+    name="jmawirat_ml_helpers",
+    version="1.0.1",
     author="Jonel Mawirat",
     author_email="jmawirat@outlook.com",
     description="Time-series data splitting, feature engineering, and stationarity transformations",
