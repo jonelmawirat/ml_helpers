@@ -12,7 +12,8 @@ def split_time_series(
     forecast_horizon=10,
     step_size=1,
     figsize=(10, 6),
-    sort_col=None
+    sort_col=None,
+    plot=False
 ):
     """
     Splits a time-series DataFrame using one of:
@@ -30,7 +31,7 @@ def split_time_series(
     If 'date_col' is provided, that column is parsed as datetime, but not
     necessarily used for sorting unless 'sort_col == date_col'.
 
-    - Plots each split (Train in blue, Test in orange).
+    - If plot=True, the function will show plots for each split (Train in blue, Test in orange).
     - Returns a list of (train_df, test_df) pairs.
 
     Parameters
@@ -63,6 +64,8 @@ def split_time_series(
     sort_col : str or None, optional
         If None, sort by index. Otherwise, sort by 'sort_col' unless
         it matches the named index, in which case it's sorted by index.
+    plot : bool, optional
+        Whether to show plots for the splits. Default is True.
 
     Returns
     -------
@@ -82,7 +85,7 @@ def split_time_series(
     if date_col is not None and date_col in df_new.columns:
         df_new[date_col] = pd.to_datetime(df_new[date_col])
 
-    # 3. Sorting logic (similar to your other feature functions)
+    # 3. Sorting logic
     if sort_col is None:
         # Sort by index
         df_new = df_new.sort_index()
@@ -113,12 +116,11 @@ def split_time_series(
     if date_col is not None and date_col in df_new.columns:
         x_vals = df_new[date_col].values
     else:
-        # If no date_col, use the (already reindexed) index
         x_vals = df_new.index.values
 
     n = len(df_new)
 
-    # A small helper function to plot a portion of the data
+    # Helper function for plotting (only used if plot=True)
     def plot_data(ax, start_idx, end_idx, label_prefix, color):
         """
         Plots the values from start_idx to end_idx for each column in
@@ -144,10 +146,9 @@ def split_time_series(
         else:
             split_idx = int(train_size)
 
-        # If invalid, return empty list and skip plotting
+        # If invalid, return empty list and skip
         if split_idx < 1 or split_idx >= n:
             print("No valid 'train_test' split: 'train_size' out of range.")
-            # Revert df_new to original ordering and return
             df_new = df_new.reindex(original_index)
             return []
 
@@ -155,24 +156,25 @@ def split_time_series(
         test_df = df_new.iloc[split_idx:]
         all_splits.append((train_df, test_df))
 
-        # Plot
-        plt.figure(figsize=figsize)
-        ax = plt.gca()
+        # Plot only if plot=True
+        if plot:
+            plt.figure(figsize=figsize)
+            ax = plt.gca()
 
-        # Plot entire dataset in light gray for reference
-        for col in value_cols_to_plot:
-            ax.plot(x_vals, df_new[col].values, color="lightgray", label=f"All - {col}")
+            # Plot entire dataset in light gray for reference
+            for col in value_cols_to_plot:
+                ax.plot(x_vals, df_new[col].values, color="lightgray", label=f"All - {col}")
 
-        # Train portion
-        plot_data(ax, 0, split_idx, "Train", "blue")
-        # Test portion
-        plot_data(ax, split_idx, n, "Test", "orange")
+            # Train portion
+            plot_data(ax, 0, split_idx, "Train", "blue")
+            # Test portion
+            plot_data(ax, split_idx, n, "Test", "orange")
 
-        ax.set_title("Train-Test Split")
-        ax.set_xlabel(date_col if date_col else "Index")
-        ax.set_ylabel("Values")
-        ax.legend()
-        plt.show()
+            ax.set_title("Train-Test Split")
+            ax.set_xlabel(date_col if date_col else "Index")
+            ax.set_ylabel("Values")
+            ax.legend()
+            plt.show()
 
     # =========================================================================
     # METHOD 2: EXPANDING WINDOW
@@ -205,38 +207,40 @@ def split_time_series(
             df_new = df_new.reindex(original_index)
             return []
 
-        # Plot setup
-        rows = int(np.ceil(len(splits) / 2))
-        cols = 2 if len(splits) > 1 else 1
-        fig, axes = plt.subplots(rows, cols, figsize=(figsize[0]*1.5, figsize[1]*rows), squeeze=False)
-        axes = axes.flatten()
+        # Plot setup (only if plot=True)
+        if plot:
+            rows = int(np.ceil(len(splits) / 2))
+            cols = 2 if len(splits) > 1 else 1
+            fig, axes = plt.subplots(rows, cols, figsize=(figsize[0]*1.5, figsize[1]*rows), squeeze=False)
+            axes = axes.flatten()
 
         for i, (train_start, train_end, test_start, test_end) in enumerate(splits):
             tr_df = df_new.iloc[train_start:train_end]
             te_df = df_new.iloc[test_start:test_end]
             all_splits.append((tr_df, te_df))
 
-            ax = axes[i]
-            # Plot entire dataset in light gray
-            for col in value_cols_to_plot:
-                ax.plot(x_vals, df_new[col].values, color="lightgray")
+            if plot:
+                ax = axes[i]
+                # Plot entire dataset in light gray
+                for col in value_cols_to_plot:
+                    ax.plot(x_vals, df_new[col].values, color="lightgray")
 
-            # Plot train portion
-            plot_data(ax, train_start, train_end, "Train", "blue")
-            # Plot test portion
-            plot_data(ax, test_start, test_end, "Test", "orange")
+                # Plot train portion
+                plot_data(ax, train_start, train_end, "Train", "blue")
+                # Plot test portion
+                plot_data(ax, test_start, test_end, "Test", "orange")
 
-            ax.set_title(
-                f"Expanding Split #{i}\n"
-                f"(Train=[0:{train_end}), Test=[{train_end}:{test_end}))"
-            )
+                ax.set_title(
+                    f"Expanding Split #{i}\n"
+                    f"(Train=[0:{train_end}), Test=[{train_end}:{test_end}))"
+                )
 
-        # Hide unused subplots
-        for j in range(len(splits), len(axes)):
-            axes[j].set_visible(False)
-
-        plt.tight_layout()
-        plt.show()
+        if plot:
+            # Hide unused subplots
+            for j in range(len(splits), len(axes)):
+                axes[j].set_visible(False)
+            plt.tight_layout()
+            plt.show()
 
     # =========================================================================
     # METHOD 3: ROLLING WINDOW
@@ -263,42 +267,43 @@ def split_time_series(
             df_new = df_new.reindex(original_index)
             return []
 
-        rows = int(np.ceil(len(splits) / 2))
-        cols = 2 if len(splits) > 1 else 1
-        fig, axes = plt.subplots(rows, cols, figsize=(figsize[0]*1.5, figsize[1]*rows), squeeze=False)
-        axes = axes.flatten()
+        if plot:
+            rows = int(np.ceil(len(splits) / 2))
+            cols = 2 if len(splits) > 1 else 1
+            fig, axes = plt.subplots(rows, cols, figsize=(figsize[0]*1.5, figsize[1]*rows), squeeze=False)
+            axes = axes.flatten()
 
         for i, (train_start, train_end, test_start, test_end) in enumerate(splits):
             tr_df = df_new.iloc[train_start:train_end]
             te_df = df_new.iloc[test_start:test_end]
             all_splits.append((tr_df, te_df))
 
-            ax = axes[i]
-            # Light gray for entire series
-            for col in value_cols_to_plot:
-                ax.plot(x_vals, df_new[col].values, color="lightgray")
+            if plot:
+                ax = axes[i]
+                # Light gray for entire series
+                for col in value_cols_to_plot:
+                    ax.plot(x_vals, df_new[col].values, color="lightgray")
 
-            plot_data(ax, train_start, train_end, "Train", "blue")
-            plot_data(ax, test_start, test_end, "Test", "orange")
+                plot_data(ax, train_start, train_end, "Train", "blue")
+                plot_data(ax, test_start, test_end, "Test", "orange")
 
-            ax.set_title(
-                f"Rolling Split #{i}\n"
-                f"(Train=[{train_start}:{train_end}), Test=[{test_start}:{test_end}))"
-            )
+                ax.set_title(
+                    f"Rolling Split #{i}\n"
+                    f"(Train=[{train_start}:{train_end}), Test=[{test_start}:{test_end}))"
+                )
 
-        # Hide extra axes
-        for j in range(len(splits), len(axes)):
-            axes[j].set_visible(False)
-
-        plt.tight_layout()
-        plt.show()
+        if plot:
+            # Hide extra axes
+            for j in range(len(splits), len(axes)):
+                axes[j].set_visible(False)
+            plt.tight_layout()
+            plt.show()
 
     else:
         raise ValueError("method must be one of {'train_test', 'expanding', 'rolling'}")
 
     # 5. Revert df_new to the original row ordering (for consistency)
     df_new = df_new.reindex(original_index)
-    # (Note that the returned splits remain in **time-sorted** order.)
 
     return all_splits
 
